@@ -6,6 +6,8 @@ boolean gameOver;
 int tick = 0;
 int highscore = 0;
 int score = 0;
+Serial serial;
+boolean controllerPressed = false;
 
 void setup() {
   size(1024, 720);
@@ -13,6 +15,12 @@ void setup() {
   player = new Player();
   barriers = new ArrayList<Barrier>();
   gameOver = false;
+  String[] comPorts = Serial.list();
+  if (comPorts.length > 0) {
+    println("COM Devices found!");
+    serial = new Serial(this, comPorts[0], 115200);
+    serial.bufferUntil('\n');
+  }
 }
 
 void draw() {
@@ -22,11 +30,11 @@ void draw() {
 
   if (checkForNewBarrier()) {
     Barrier b = new Barrier();
-    b.reset(); //<>//
+    b.reset();
     barriers.add(b);
   }
 
-  player.setJumping(mousePressed);
+  player.setJumping(mousePressed || controllerPressed);
   player.update(tick, width, height);
   Player.Bounds playerBounds = player.getBounds();
   if (player.getCollider().isOutOfBounds(width, height)) {
@@ -153,3 +161,17 @@ void endGame() {
   }
   noLoop();
 }
+
+void serialEvent(Serial p) { 
+  String input = p.readString();
+  switch (input) {
+  case "JUMP\n":
+    controllerPressed = true;
+    println("JUMP");
+    break;
+  case "STOPJUMP\n":
+    controllerPressed = false;
+    println("STOPJUMP");
+    break;
+  }
+} 
