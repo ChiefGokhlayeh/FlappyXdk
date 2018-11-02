@@ -21,7 +21,7 @@ public class Barrier {
   }
   
   public Barrier(float tickRate) {
-    this(random(-1, 1), random(2, 4), tickRate);
+    this(random(-1, 1), random(5, 10), tickRate);
   }
 
   public Barrier(float openingY, float openingSize, float tickRate) {
@@ -83,6 +83,10 @@ public class Barrier {
   
   public Bounds getBounds() {
     return bounds;
+  }
+  
+  public float getOpeningX() {
+    return openingX;
   }
 
   public class Bounds {

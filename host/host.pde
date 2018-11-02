@@ -4,23 +4,25 @@ Player player;
 ArrayList<Barrier> barriers;
 boolean gameOver;
 int tick = 0;
+int startOfGameTick = 0;
 int highscore = 0;
 int score = 0;
 Serial serial;
 boolean controllerPressed = false;
+float difficulty = 0.25f;
 
 void setup() {
   size(1024, 720);
 
   player = new Player();
   barriers = new ArrayList<Barrier>();
-  gameOver = false;
   String[] comPorts = Serial.list();
   if (comPorts.length > 0) {
     println("COM Devices found!");
     serial = new Serial(this, comPorts[0], 115200);
     serial.bufferUntil('\n');
   }
+  reset();
 }
 
 void draw() {
@@ -28,13 +30,15 @@ void draw() {
 
   tick = millis();
 
-  if (checkForNewBarrier()) {
-    Barrier b = new Barrier();
-    b.reset();
-    barriers.add(b);
+  if (checkForNewBarrier(tick)) {
+    if (barriers.size() <= 0 || (barriers.get(barriers.size() - 1).getOpeningX() < 1.f - difficulty * 2)) {
+      Barrier b = new Barrier();
+      b.reset();
+      barriers.add(b);
+    }
   }
 
-  player.setJumping(mousePressed || controllerPressed);
+  player.setJumping(mousePressed || controllerPressed || (key == ' ' && keyPressed));
   player.update(tick, width, height);
   Player.Bounds playerBounds = player.getBounds();
   if (player.getCollider().isOutOfBounds(width, height)) {
@@ -136,8 +140,10 @@ void drawEndGame() {
   text("Click to contine...", width/2, (height/3) * 2);
 }
 
-boolean checkForNewBarrier() {
-  return barriers.size() < 1;
+boolean checkForNewBarrier(int tick) {
+  /* difficulty curve: https://www.desmos.com/calculator/cmt3ll2ktq */
+  float relTick = (tick - startOfGameTick) / 1000.f;
+  return barriers.size() < int(-1.f / (pow(difficulty, 3) * relTick + difficulty) + 1.f / difficulty + 1);
 }
 
 void mousePressed() {
@@ -146,11 +152,20 @@ void mousePressed() {
   }
 }
 
+void keyPressed() {
+  if (key == ' ') {
+    if (gameOver) {
+      reset();
+    }
+  }
+}
+
 void reset() {
   gameOver = false;
   player.reset();
   barriers.clear();
   score = 0;
+  startOfGameTick = tick;
   loop();
 }
 
