@@ -189,4 +189,7 @@ void serialEvent(Serial p) {
     println("STOPJUMP");
     break;
   }
+  if (gameOver) {
+    reset();
+  }
 } 
